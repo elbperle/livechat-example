@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      var socket = io.connect('http://localhost:3000');
+      
+      socket.on('initChat', function (chatHistory) {
+        for(var i=0; i<chatHistory.length; i++) {
+          renderChatMessage(chatHistory[i]);          
+        }
+      });
+      
+      socket.on('updateOtherChatMessage', function(messageObj) {
+        renderChatMessage(messageObj);
+      });
+      
+      document.addEventListener("DOMContentLoaded", function() {
+        var chatForm = document.querySelector("form");
+        chatForm.addEventListener("submit", function(event) {
+          event.preventDefault();
+          var messageObj = getChatMessage();
+          renderChatMessage(messageObj);
+          socket.emit("sendChatMessage", messageObj);
+          this.reset();
+        });
+      });
+      
+      function getChatMessage() {
+        var messageObj = {};
+        messageObj.nick =  document.querySelector("input[name='nick']").value;
+        messageObj.message =  document.querySelector("input[name='message']").value;
+        return messageObj;
+      }
+      
+      function renderChatMessage(messageObj) {
+        document.querySelector("output").innerHTML += "<p>" + messageObj.nick + ": " + messageObj.message + "</p>";
+      }
+      
+    </script>
+    <style>
+      
+    </style>
+  </head>
+  <body>
+    <h1>Chat</h1>
+    <form>
+      <label for="nick">Nickname</label><input type="text" name="nick" maxlength="10">
+      <label for="message">Nachricht</label><input type="text" name="message">  
+      <input type="submit" value="Send"> 
+    </form>
+    <output id="chat-history"></output>
+  <body>
+</html>
