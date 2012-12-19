@@ -23,9 +23,8 @@ io.sockets.on('connection', function (socket) {
     socket.emit("initChat", chatHistory);
     
     socket.on("sendChatMessage", function(messageObj) {
-        chatHistory.push(messageObj);        
+        chatHistory.push(messageObj);
         socket.broadcast.emit("updateOtherChatMessage", messageObj);
-        console.log("incoming: ", messageObj);
     })
 });
 

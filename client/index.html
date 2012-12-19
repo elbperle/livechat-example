@@ -3,52 +3,87 @@
   <head>
     <script src="/socket.io/socket.io.js"></script>
     <script>
-      var socket = io.connect('http://localhost:3000');
-      
-      socket.on('initChat', function (chatHistory) {
-        for(var i=0; i<chatHistory.length; i++) {
-          renderChatMessage(chatHistory[i]);          
-        }
-      });
-      
-      socket.on('updateOtherChatMessage', function(messageObj) {
-        renderChatMessage(messageObj);
-      });
-      
       document.addEventListener("DOMContentLoaded", function() {
         var chatForm = document.querySelector("form");
+        var chatOutput = document.querySelector("output");
+        var socket = io.connect('http://localhost:3000');
+        
+        socket.on('initChat', function (chatHistory) {
+          for(var i=0; i<chatHistory.length; i++) {
+            renderChatMessage(chatHistory[i]);          
+          }
+        });
+        
+        socket.on('updateOtherChatMessage', function(messageObj) {
+          renderChatMessage(messageObj);
+        });
+        
         chatForm.addEventListener("submit", function(event) {
           event.preventDefault();
           var messageObj = getChatMessage();
+          
+          if(!messageObj.nick || !messageObj.message) {
+            return;
+          }
+          
           renderChatMessage(messageObj);
           socket.emit("sendChatMessage", messageObj);
           this.reset();
         });
+        
+        function getChatMessage() {
+          return {
+            nick:    document.querySelector("#nick").value,
+            message: document.querySelector("#message").value
+          };
+        }
+        
+        function renderChatMessage(messageObj) {
+          chatOutput.innerHTML += "<p><strong>" + messageObj.nick + "</strong> " + messageObj.message + "</p>";
+          chatOutput.scrollTop = chatOutput.scrollHeight;
+        }
       });
-      
-      function getChatMessage() {
-        var messageObj = {};
-        messageObj.nick =  document.querySelector("input[name='nick']").value;
-        messageObj.message =  document.querySelector("input[name='message']").value;
-        return messageObj;
-      }
-      
-      function renderChatMessage(messageObj) {
-        document.querySelector("output").innerHTML += "<p>" + messageObj.nick + ": " + messageObj.message + "</p>";
-      }
-      
     </script>
     <style>
+      body {
+        font: 1em Arial, sans-serif;
+        background-color: #ecf;
+      }
+      strong {
+        font-style: italic;  
+        display: inline-block;
+        min-width: 50px;
+      }
       
+      strong:after {
+        content: ":";
+      }
+      
+      output {
+        display: block;
+        height: 400px;
+        background-color: #fff;
+        border: 1px solid #666;
+        overflow: auto;
+        margin: 20px 0;
+      }
+      
+      input {
+        margin-right: 20px;
+      }
+      
+      p {
+        margin: 2px;
+      }
     </style>
   </head>
   <body>
     <h1>Chat</h1>
+    <output></output> 
     <form>
-      <label for="nick">Nickname</label><input type="text" name="nick" maxlength="10">
-      <label for="message">Nachricht</label><input type="text" name="message">  
+      <label for="nick">Nickname</label><input type="text" id="nick" maxlength="10">
+      <label for="message">Nachricht</label><input type="text" id="message">  
       <input type="submit" value="Send"> 
     </form>
-    <output id="chat-history"></output>
   <body>
 </html>
